@@ -260,8 +260,10 @@ export const processContentTypes = async (
     process.stdout.write('\nFollowing Repositories were not found in destination Hub:\n');
 
     uniq(notFoundRepositories).map(name => process.stdout.write(name + '\n'));
-  } else if (skipAssign){
-    process.stdout.write('\nContent types were not automatically registered to the repositories because of --skipAssign argument.\n');
+  } else if (skipAssign) {
+    process.stdout.write(
+      '\nContent types were not automatically registered to the repositories because of --skipAssign argument.\n'
+    );
   }
 
   process.stdout.write('\n');
