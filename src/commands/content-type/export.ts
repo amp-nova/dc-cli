@@ -16,7 +16,7 @@ import {
 } from '../../services/export.service';
 import { loadJsonFromDirectory } from '../../services/import.service';
 import { validateNoDuplicateContentTypeUris } from './import';
-import { isEqual } from 'lodash';
+import { isEqual, compact } from 'lodash';
 import { ExportBuilderOptions } from '../../interfaces/export-builder-options.interface';
 import { ensureDirectoryExists } from '../../common/import/directory-utils';
 
@@ -79,15 +79,17 @@ export const getReposNamesForContentType = (
   repositories: ContentRepository[] = [],
   contentType: ContentType
 ): string[] => {
-  return repositories
-    .filter(
-      repo =>
-        repo.contentTypes &&
-        repo.contentTypes.find(
-          el => el.hubContentTypeId === contentType.id && el.contentTypeUri === contentType.contentTypeUri
-        )
-    )
-    .map(repo => repo.name || '');
+  return compact(
+    repositories
+      .filter(
+        repo =>
+          repo.contentTypes &&
+          repo.contentTypes.find(
+            el => el.hubContentTypeId === contentType.id && el.contentTypeUri === contentType.contentTypeUri
+          )
+      )
+      .map(repo => repo.name || '')
+  );
 };
 
 export const getExportRecordForContentType = (
