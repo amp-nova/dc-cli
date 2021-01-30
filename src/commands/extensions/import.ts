@@ -45,7 +45,7 @@ export const handler = async (
   const fetchClient = new FetchClientService();
   await fetchClient.init(argv);
   const publishedExtensions = await fetchClient.getExtensionsList();
-    
+
   const log = typeof logFile === 'string' || logFile == null ? new FileLog(logFile) : logFile;
 
   try {
@@ -56,7 +56,7 @@ export const handler = async (
     const publishedExtensionsIDs = publishedExtensions.map((x: any) => x.id);
     const importExtensionsIDs = importExtensions.map((x: any) => x.id);
     const alreadyExists = publishedExtensionsIDs.filter((x: any) => importExtensionsIDs.includes(x));
-    
+
     if (alreadyExists.length > 0) {
       const question = !force
         ? await asyncQuestion(
@@ -82,7 +82,6 @@ export const handler = async (
         }
 
         if (exists) {
-
           // Remove hubId and Secret for update
           delete item.hubId;
           delete item.secret;
@@ -91,7 +90,6 @@ export const handler = async (
           const updatedExtensionId = await fetchClient.updateExtension(exists, item);
           log.addAction('UDPATE', updatedExtensionId || '');
         } else {
-
           // Remove ID, hubId and Secret for creation
           delete item.id;
           delete item.hubId;

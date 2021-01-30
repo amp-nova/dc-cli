@@ -69,7 +69,9 @@ export const handler = async (
       const updateExisting = question || force;
 
       if (!updateExisting) {
-        importWorkflowStates = importWorkflowStates.filter((item: WorkflowState) => !publishedWorkflowStatesIDs.includes(item.id));
+        importWorkflowStates = importWorkflowStates.filter(
+          (item: WorkflowState) => !publishedWorkflowStatesIDs.includes(item.id)
+        );
       }
     }
     await Promise.all(

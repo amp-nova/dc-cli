@@ -17,21 +17,22 @@ export interface ExportWebhooksOptions {
 }
 
 export const builder = (yargs: Argv): void => {
-  yargs.positional('dir', {
-    describe: 'Output directory for the exported Webhooks',
-    type: 'string'
-  })
-  .option('excludeSearch', {
-    type: 'boolean',
-    boolean: true,
-    describe: 'Exclude search index integration webhooks.'
-  })
-  .alias('f', 'force')
-  .option('f', {
-    type: 'boolean',
-    boolean: true,
-    describe: 'If present, there will be no confirmation prompt before exporting webhooks.'
-  });
+  yargs
+    .positional('dir', {
+      describe: 'Output directory for the exported Webhooks',
+      type: 'string'
+    })
+    .option('excludeSearch', {
+      type: 'boolean',
+      boolean: true,
+      describe: 'Exclude search index integration webhooks.'
+    })
+    .alias('f', 'force')
+    .option('f', {
+      type: 'boolean',
+      boolean: true,
+      describe: 'If present, there will be no confirmation prompt before exporting webhooks.'
+    });
 };
 
 export const processWebhooks = async (
@@ -49,7 +50,7 @@ export const processWebhooks = async (
 
   const uniqueFilename = dir + path.sep + file + '.json';
 
-  if (!force) { 
+  if (!force) {
     if (!(await promptToExportSettings(uniqueFilename))) {
       return nothingExportedExit();
     }
@@ -60,7 +61,9 @@ export const processWebhooks = async (
   process.stdout.write('Webhooks exported successfully! \n');
 };
 
-export const handler = async (argv: Arguments<ArchiveOptions & ExportBuilderOptions & ConfigurationParameters & ExportWebhooksOptions>): Promise<void> => {
+export const handler = async (
+  argv: Arguments<ArchiveOptions & ExportBuilderOptions & ConfigurationParameters & ExportWebhooksOptions>
+): Promise<void> => {
   const { dir, excludeSearch, force } = argv;
 
   const client = dynamicContentClientFactory(argv);
@@ -68,7 +71,7 @@ export const handler = async (argv: Arguments<ArchiveOptions & ExportBuilderOpti
   let webhooks = await paginator(hub.related.webhooks.list);
 
   if (excludeSearch) {
-    webhooks = webhooks.filter((item: any) => !item.label.startsWith("Search Index: "))
+    webhooks = webhooks.filter((item: any) => !item.label.startsWith('Search Index: '));
   }
   await processWebhooks(dir, hub, webhooks, force);
 };

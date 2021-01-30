@@ -1,7 +1,7 @@
 import { Arguments, Argv } from 'yargs';
 import DataPresenter, { RenderingArguments, RenderingOptions } from '../../view/data-presenter';
 import dynamicContentClientFactory from '../../services/dynamic-content-client-factory';
-import { ContentItem, WorkflowState } from 'dc-management-sdk-js';
+import { ContentItem } from 'dc-management-sdk-js';
 import { ConfigurationParameters } from '../configure';
 import { singleItemTableOptions } from '../../common/table/table.consts';
 import BuilderOptions from '../../interfaces/builder-options';

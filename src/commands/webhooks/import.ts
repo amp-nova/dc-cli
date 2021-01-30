@@ -87,9 +87,7 @@ export const handler = async (
         // Remove ID and Secret for creation
         item.id = undefined;
         item.secret = undefined;
-        const newItem = await hub.related.webhooks.create(
-          new Webhook(item)
-        );
+        const newItem = await hub.related.webhooks.create(new Webhook(item));
         log.addAction('CREATE', newItem.id || '');
       })
     );

@@ -7,14 +7,14 @@ import { FetchClientService } from '../../services/fetch-client-service-class';
 
 export const command = 'list';
 
-export const desc = "List Indexes";
+export const desc = 'List Indexes';
 
 export const builder: CommandOptions = {
   ...SortingOptions,
   ...RenderingOptions
 };
 
-export const itemMapFn = ({ id, name, type}: any): object => {
+export const itemMapFn = ({ id, name, type }: any): object => {
   return { ID: id, Name: name, Type: type };
 };
 

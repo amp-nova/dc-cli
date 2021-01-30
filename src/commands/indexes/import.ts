@@ -44,9 +44,9 @@ export const handler = async (
   const { filePath: sourceFile, logFile, force, answer = true } = argv;
   const fetchClient = new FetchClientService();
   await fetchClient.init(argv);
-  
+
   const publishedIndexes = await fetchClient.getIndexesList();
-    
+
   const log = typeof logFile === 'string' || logFile == null ? new FileLog(logFile) : logFile;
 
   try {
@@ -57,7 +57,7 @@ export const handler = async (
     const publishedIndexesIDs = publishedIndexes.map((x: any) => x.id);
     const importIndexesIDs = importIndexes.map((x: any) => x.id);
     const alreadyExists = publishedIndexesIDs.filter((x: any) => importIndexesIDs.includes(x));
-    
+
     if (alreadyExists.length > 0) {
       const question = !force
         ? await asyncQuestion(
@@ -77,27 +77,26 @@ export const handler = async (
         const exists = publishedIndexesIDs.includes(item.id) ? item.id : undefined;
 
         if (exists) {
-
           // Delete index and replicas
           console.log(`Deleting index and replicas: ${exists}`);
           const deletedIndexIds = await fetchClient.deleteIndexAndReplicas(exists);
-          console.log(`...Index and replicas deleted for IDs: ${deletedIndexIds}`)
+          console.log(`...Index and replicas deleted for IDs: ${deletedIndexIds}`);
           console.log();
-          log.addAction('DELETE INDEX', deletedIndexIds.join(",") );
+          log.addAction('DELETE INDEX', deletedIndexIds.join(','));
           // await asyncQuestion("");
         }
 
         // Remove ID and replica count for creation
         delete item.indexDetails.id;
         delete item.indexDetails.replicaCount;
-        
+
         // Create index
         console.log(`Creating index for index name: ${item.indexDetails.name}`);
         const createdIndexId = await fetchClient.createIndex(item.indexDetails);
         console.log(`...Index created with ID: ${createdIndexId}`);
         log.addAction('CREATE INDEX', createdIndexId || '');
         // await asyncQuestion("");
-        
+
         // Update index settings
         console.log(`\nUpdating index settings for ID: ${createdIndexId}`);
         const updatedIndexId = await fetchClient.updateIndexSettings(createdIndexId, item.settings);
@@ -109,30 +108,24 @@ export const handler = async (
         const replicasSettings: any[] = item.replicasSettings;
 
         // Get list of replicas indexes by name
-        console.log(`\nGetting replica index details from names: ${replicasSettings
-            .map((x: any)=>x.name)
-            .join(",")}`);
-        const replicasIndexes = await Promise.all(
-          replicasSettings.map( 
-            (item: any) => fetchClient.getIndexByName(item.name)
-          )
+        console.log(
+          `\nGetting replica index details from names: ${replicasSettings.map((x: any) => x.name).join(',')}`
         );
-        console.log(`...Retrieved replica index details for IDs: ${replicasIndexes
-          .map((x: any)=>x.id)
-          .join(",")}`);
+        const replicasIndexes = await Promise.all(
+          replicasSettings.map((item: any) => fetchClient.getIndexByName(item.name))
+        );
+        console.log(`...Retrieved replica index details for IDs: ${replicasIndexes.map((x: any) => x.id).join(',')}`);
 
         // Update replicas settings
-        console.log(`\nUpdating replicas settings for IDs: ${replicasIndexes
-          .map((x: any)=>x.id)
-          .join(",")}`);
+        console.log(`\nUpdating replicas settings for IDs: ${replicasIndexes.map((x: any) => x.id).join(',')}`);
         const updatedReplicasSettingsIds = await Promise.all(
-          replicasIndexes.map( 
-            (item: any, i: number) => fetchClient.updateIndexSettings(item.id, replicasSettings[i].settings)
+          replicasIndexes.map((item: any, i: number) =>
+            fetchClient.updateIndexSettings(item.id, replicasSettings[i].settings)
           )
         );
-        console.log(`...Updated replicas settings for IDs: ${updatedReplicasSettingsIds.join(",")}`);
+        console.log(`...Updated replicas settings for IDs: ${updatedReplicasSettingsIds.join(',')}`);
         console.log();
-        log.addAction('UPDATE INDEX SETTINGS', updatedReplicasSettingsIds.join(",") || '');
+        log.addAction('UPDATE INDEX SETTINGS', updatedReplicasSettingsIds.join(',') || '');
       })
     );
 

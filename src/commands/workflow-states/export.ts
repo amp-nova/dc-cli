@@ -13,16 +13,17 @@ export const command = 'export <dir>';
 export const desc = 'Export Workflow States';
 
 export const builder = (yargs: Argv): void => {
-  yargs.positional('dir', {
-    describe: 'Output directory for the exported Workflow States',
-    type: 'string'
-  })
-  .alias('f', 'force')
-  .option('f', {
-    type: 'boolean',
-    boolean: true,
-    describe: 'If present, there will be no confirmation prompt before exporting workflow states.'
-  });
+  yargs
+    .positional('dir', {
+      describe: 'Output directory for the exported Workflow States',
+      type: 'string'
+    })
+    .alias('f', 'force')
+    .option('f', {
+      type: 'boolean',
+      boolean: true,
+      describe: 'If present, there will be no confirmation prompt before exporting workflow states.'
+    });
 };
 
 export const processWorkflowStates = async (
@@ -43,7 +44,7 @@ export const processWorkflowStates = async (
   if (!force) {
     if (!(await promptToExportSettings(uniqueFilename))) {
       return nothingExportedExit();
-   }
+    }
   }
 
   writeJsonToFile(uniqueFilename, workflowStates);
@@ -51,7 +52,9 @@ export const processWorkflowStates = async (
   process.stdout.write('Workflow States exported successfully! \n');
 };
 
-export const handler = async (argv: Arguments<ArchiveOptions & ExportBuilderOptions & ConfigurationParameters>): Promise<void> => {
+export const handler = async (
+  argv: Arguments<ArchiveOptions & ExportBuilderOptions & ConfigurationParameters>
+): Promise<void> => {
   const { dir, force } = argv;
 
   const client = dynamicContentClientFactory(argv);

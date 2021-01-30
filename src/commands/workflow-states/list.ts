@@ -9,7 +9,7 @@ import paginator from '../../common/dc-management-sdk-js/paginator';
 
 export const command = 'list';
 
-export const desc = "List Workflow States";
+export const desc = 'List Workflow States';
 
 export const builder: CommandOptions = {
   ...SortingOptions,

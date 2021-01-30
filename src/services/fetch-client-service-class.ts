@@ -1,4 +1,3 @@
-import { isNull } from 'lodash';
 import { Arguments } from 'yargs';
 import { ConfigurationParameters } from '../commands/configure';
 import { FetchUtilities } from '../common/fetch-utilities/fetch-utilities-class';
@@ -14,7 +13,7 @@ export interface IndexEntry {
 }
 
 /**
- * Service to manipulate Amplience resources using general fetch utilities to get, 
+ * Service to manipulate Amplience resources using general fetch utilities to get,
  * list, import, export extensions and indexes/replicas
  */
 export class FetchClientService {
@@ -36,9 +35,7 @@ export class FetchClientService {
    * @param extensionId ID of extension to retrieve
    */
   async getExtension(extensionId: any): Promise<any> {
-    const extension = await this.client.fetchResource(
-      `/extensions/${extensionId}`
-    );  
+    const extension = await this.client.fetchResource(`/extensions/${extensionId}`);
     return extension;
   }
 
@@ -58,11 +55,8 @@ export class FetchClientService {
    * @param extensionId ID of extension to delete
    */
   async deleteExtension(extensionId: any): Promise<any> {
-    const deletedExtensionId = await this.client.deleteResource(
-      `/extensions/${extensionId}`,
-      extensionId
-    );
-    return deletedExtensionId; 
+    const deletedExtensionId = await this.client.deleteResource(`/extensions/${extensionId}`, extensionId);
+    return deletedExtensionId;
   }
 
   /**
@@ -70,11 +64,8 @@ export class FetchClientService {
    * @param data Extension data
    */
   async createExtension(data: any): Promise<any> {
-    const extensionId = await this.client.createResource(
-      `/hubs/${this.hubId}/extensions`,
-      data
-    );
-    return extensionId; 
+    const extensionId = await this.client.createResource(`/hubs/${this.hubId}/extensions`, data);
+    return extensionId;
   }
 
   /**
@@ -83,11 +74,7 @@ export class FetchClientService {
    * @param data Extension data
    */
   async updateExtension(extensionId: string, data: any): Promise<string> {
-    const updatedExtensionId = await this.client.updateResource(
-      `/extensions/${extensionId}`,
-      extensionId,
-      data
-    );
+    const updatedExtensionId = await this.client.updateResource(`/extensions/${extensionId}`, extensionId, data);
     return updatedExtensionId;
   }
 
@@ -101,7 +88,7 @@ export class FetchClientService {
     );
     return indexesList;
   }
-  
+
   /**
    * Fetch list of all indexes with details
    */
@@ -118,29 +105,27 @@ export class FetchClientService {
    * @param indexId ID of the index to retrieve
    */
   async getIndex(indexId: any): Promise<any> {
+    // Retrieve index details
+    const index = await this.client.fetchResource(`/algolia-search/${this.hubId}/indexes/${indexId}`);
 
-      // Retrieve index details
-      const index = await this.client.fetchResource(
-        `/algolia-search/${this.hubId}/indexes/${indexId}`
-      ); 
-    
-      // If index entry found, get settings and assigned content types
-      if (index.id) {
+    // If index entry found, get settings and assigned content types
+    if (index.id) {
+      // Retrieve index settings
+      const settings = await this.getIndexSettings(indexId);
 
-        // Retrieve index settings
-        const settings = await this.getIndexSettings(indexId); 
+      // Retrieve index assigned content types
+      const assignedContentTypes = await this.client.fetchPaginatedResourcesList(
+        `/algolia-search/${this.hubId}/indexes/${indexId}/assigned-content-types`,
+        'assigned-content-types'
+      );
 
-        // Retrieve index assigned content types
-        const assignedContentTypes = await this.client.fetchPaginatedResourcesList(
-          `/algolia-search/${this.hubId}/indexes/${indexId}/assigned-content-types`,
-          'assigned-content-types'
-        );
-      
-        // Add settings and assigned content types to the response
-        index.settings = settings;
-        if (assignedContentTypes.length > 0) { index.assignedContentTypes = assignedContentTypes; }
+      // Add settings and assigned content types to the response
+      index.settings = settings;
+      if (assignedContentTypes.length > 0) {
+        index.assignedContentTypes = assignedContentTypes;
       }
-      return index;
+    }
+    return index;
   }
 
   /**
@@ -160,11 +145,8 @@ export class FetchClientService {
    * @param data Settings data
    */
   async createIndex(data: any): Promise<any> {
-    const indexId = await this.client.createResource(
-      `/algolia-search/${this.hubId}/indexes`,
-      data
-    );
-    return indexId; 
+    const indexId = await this.client.createResource(`/algolia-search/${this.hubId}/indexes`, data);
+    return indexId;
   }
 
   /**
@@ -176,7 +158,7 @@ export class FetchClientService {
       `/algolia-search/${this.hubId}/indexes/${indexId}`,
       indexId
     );
-    return deletedIndexId;     
+    return deletedIndexId;
   }
 
   /**
@@ -184,7 +166,7 @@ export class FetchClientService {
    * @param indexId ID of the index
    */
   async getIndexSettings(indexId: any): Promise<any> {
-    const settings = await this.client.fetchResource(`/algolia-search/${this.hubId}/indexes/${indexId}/settings`)
+    const settings = await this.client.fetchResource(`/algolia-search/${this.hubId}/indexes/${indexId}/settings`);
     return settings;
   }
 
@@ -193,7 +175,6 @@ export class FetchClientService {
    * @param indexId ID of the index to delete
    */
   async deleteIndexAndReplicas(indexId: any): Promise<any[]> {
-    
     // Get and delete replicas first
     const indexSettings = await this.client.fetchResource(`/algolia-search/${this.hubId}/indexes/${indexId}/settings`);
     let deletedReplicasIndexIds: any[] = [];
@@ -202,25 +183,15 @@ export class FetchClientService {
       const replicasNames = indexSettings.replicas;
 
       // Retrieve all replicas in parallel
-      const replicasList = await Promise.all(
-      replicasNames.map(
-        (item: any) => 
-          this.getIndexByName(item)
-        ) 
-      );
+      const replicasList = await Promise.all(replicasNames.map((item: any) => this.getIndexByName(item)));
 
       // Delete replicas
-      deletedReplicasIndexIds = await Promise.all(
-        replicasList.map(
-          (item: any) => 
-            this.deleteIndex(item.id)
-        )
-      ); 
+      deletedReplicasIndexIds = await Promise.all(replicasList.map((item: any) => this.deleteIndex(item.id)));
     }
 
     // Delete Index
     const deletedIndexId = await this.deleteIndex(indexId);
-    return [deletedIndexId, ...deletedReplicasIndexIds]; 
+    return [deletedIndexId, ...deletedReplicasIndexIds];
   }
 
   /**
@@ -228,14 +199,14 @@ export class FetchClientService {
    * @param argv Command arguments
    * @param indexId Index ID
    * @param data Settings data
-  */
+   */
   async updateIndexSettings(indexId: any, data: any): Promise<any> {
     const updatedIndexId = await this.client.updateResource(
       `/algolia-search/${this.hubId}/indexes/${indexId}/settings`,
       indexId,
       data
     );
-    return updatedIndexId; 
+    return updatedIndexId;
   }
 
   /**
@@ -246,10 +217,9 @@ export class FetchClientService {
     const indexesList = await this.getIndexesList();
     const index = indexesList.filter((item: any) => item.name === indexName);
     if (index.length > 0) {
-      console.log(`...Found index: ${index[0].id}`)
+      console.log(`...Found index: ${index[0].id}`);
       return index[0];
-    }
-    else {
+    } else {
       console.log(`...No index found for name ${indexName}`);
       return null;
     }
@@ -263,10 +233,9 @@ export class FetchClientService {
     const extensionsList = await this.getExtensionsList();
     const extension = extensionsList.filter((item: any) => item.name === extensionName);
     if (extension.length > 0) {
-      console.log(`...Found extension: ${extension[0].id}`)
+      console.log(`...Found extension: ${extension[0].id}`);
       return extension[0];
-    }
-    else {
+    } else {
       console.log(`...No exetnsion found for name ${extensionName}`);
       return null;
     }

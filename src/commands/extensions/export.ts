@@ -18,11 +18,7 @@ export const builder = (yargs: Argv): void => {
   });
 };
 
-export const processExtensions = async (
-  outputDir: string,
-  hubToExport: Hub,
-  extensions: string[]
-): Promise<void> => {
+export const processExtensions = async (outputDir: string, hubToExport: Hub, extensions: string[]): Promise<void> => {
   const { id, name } = hubToExport;
   let dir = outputDir;
   if (outputDir.substr(-1) === path.sep) {

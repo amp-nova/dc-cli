@@ -1,7 +1,7 @@
 import { Arguments, Argv } from 'yargs';
 import { ConfigurationParameters } from '../configure';
 import dynamicContentClientFactory from '../../services/dynamic-content-client-factory';
-import { DynamicContent, Hub, Webhook } from 'dc-management-sdk-js';
+import { DynamicContent, Hub } from 'dc-management-sdk-js';
 import { nothingExportedExit, promptToExportSettings, writeJsonToFile } from '../../services/export.service';
 import { ExportBuilderOptions } from '../../interfaces/export-builder-options.interface';
 import * as path from 'path';
@@ -12,16 +12,16 @@ export const desc = 'Export Hierarchy';
 
 export const builder = (yargs: Argv): void => {
   yargs
-  .positional('id', {
-    describe: 'Root Node ID',
-    type: 'string',
-    requiresArg: true
-  })
-  .positional('dir', {
-    describe: 'Output directory for the exported Hierarchy',
-    type: 'string',
-    requiresArg: true
-  });
+    .positional('id', {
+      describe: 'Root Node ID',
+      type: 'string',
+      requiresArg: true
+    })
+    .positional('dir', {
+      describe: 'Output directory for the exported Hierarchy',
+      type: 'string',
+      requiresArg: true
+    });
 };
 
 export const processHierarchy = async (
@@ -58,24 +58,25 @@ export const processHierarchy = async (
  * @param depth Maximym depth (999) in case of a loop
  */
 async function buildHierarchyModel(
-    client: DynamicContent, 
-    nodeId: any, 
-    model: any, 
-    parentId: any = null, 
-    level: number = 0, 
-    depth: number = 999) {
+  client: DynamicContent,
+  nodeId: any,
+  model: any,
+  parentId: any = null,
+  level = 0,
+  depth = 999
+): Promise<void> {
   if (level > depth) return;
-  var item = await client.hierarchies.children.get(nodeId);
-  console.log(item.label + " - id: " + item.id + ", parentId: " + parentId);
-  var childrenModel: any[] = [];
-  var contentItem = await client.contentItems.get(item.id);
+  const item = await client.hierarchies.children.get(nodeId);
+  console.log(item.label + ' - id: ' + item.id + ', parentId: ' + parentId);
+  const childrenModel: any[] = [];
+  const contentItem = await client.contentItems.get(item.id);
   model.push({
-      id: item.id,
-      label: item.label,
-      contentItem,
-      children: childrenModel
+    id: item.id,
+    label: item.label,
+    contentItem,
+    children: childrenModel
   });
-  var children = item.children;
+  const children = item.children;
 
   // Children order doesn't matter so we can get them all in parallel
   await Promise.all(
@@ -93,9 +94,8 @@ export const handler = async (argv: Arguments<ExportBuilderOptions & Configurati
 
   const client = dynamicContentClientFactory(argv);
   const hub = await client.hubs.get(argv.hubId);
-  let hierarchy: any[] = [];
+  const hierarchy: any[] = [];
   await buildHierarchyModel(client, argv.id, hierarchy);
 
-  if (hierarchy.length > 0)
-    await processHierarchy(dir, hub, argv.id, hierarchy[0]);
+  if (hierarchy.length > 0) await processHierarchy(dir, hub, argv.id, hierarchy[0]);
 };

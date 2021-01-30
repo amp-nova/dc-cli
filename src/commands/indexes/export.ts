@@ -18,12 +18,8 @@ export const builder = (yargs: Argv): void => {
   });
 };
 
-export const processIndexes = async (
-  outputDir: string,
-  hubToExport: Hub,
-  indexes: any[]
-): Promise<void> => {
-  const { id, name, label } = hubToExport;
+export const processIndexes = async (outputDir: string, hubToExport: Hub, indexes: any[]): Promise<void> => {
+  const { id, name } = hubToExport;
   let dir = outputDir;
   if (outputDir.substr(-1) === path.sep) {
     dir = dir.slice(0, -1);
@@ -50,102 +46,90 @@ export const handler = async (argv: Arguments<ExportBuilderOptions & Configurati
   const fetchClient = new FetchClientService();
   await fetchClient.init(argv);
 
-  let finalIndexesListDetails: IndexEntry[] = [];
+  const finalIndexesListDetails: IndexEntry[] = [];
 
   // Retrieve list of indexes with details
   console.log(`\nRetrieve list of indexes with details:`);
   const indexesListDetails = await fetchClient.getIdexesDetailsList();
-  console.log(`${indexesListDetails.map((x: any)=>`${x.id}: ${x.name}`).join("\n")}`);
+  console.log(`${indexesListDetails.map((x: any) => `${x.id}: ${x.name}`).join('\n')}`);
 
   // Check if there is any index and retrieve settings and assigned content types
   if (indexesListDetails.length > 0) {
-
     // Retrieve all index settings in parallel
     console.log(`\nRetrieve all index settings:`);
     const settingsList = await Promise.all(
-      indexesListDetails.map(
-        (item: any) => 
-        fetchClient.getIndexSettings(item.id)
-      ) 
+      indexesListDetails.map((item: any) => fetchClient.getIndexSettings(item.id))
     );
-    console.log(`${settingsList.map((x: any, i: number)=>i).join(",")}`);
+    console.log(`${settingsList.map((x: any, i: number) => i).join(',')}`);
 
     // Retrieve all index assigned content types in parallel
     console.log(`\nRetrieve all assigned content types:`);
     const assignedContentTypesList: any[] = await Promise.all(
-      indexesListDetails.map(
-        (item: any) => 
-        fetchClient.getIndexAssignedContentTypes(item.id)
-        ) 
-    )
-    console.log(`${assignedContentTypesList
-      .map((x: any)=>x[0] || {})
-      .map((x: any)=>x.contentTypeUri || 'none')
-      .join("\n")}`);
+      indexesListDetails.map((item: any) => fetchClient.getIndexAssignedContentTypes(item.id))
+    );
+    console.log(
+      `${assignedContentTypesList
+        .map((x: any) => x[0] || {})
+        .map((x: any) => x.contentTypeUri || 'none')
+        .join('\n')}`
+    );
 
     // Extract list of replicas
     console.log(`\nRetrieve list of replicas:`);
     const replicas = settingsList.map((settings: any) => settings.replicas || []);
-    console.log(`${replicas.map(x=>JSON.stringify(x)).join("\n")}`);
+    console.log(`${replicas.map(x => JSON.stringify(x)).join('\n')}`);
 
     // Get replicas details
     console.log(`\nRetrieve list of replicas details by names:`);
-    let replicaIndexesList: any = [];
-    for( let i = 0; i < replicas.length; i++) {
+    const replicaIndexesList: any = [];
+    for (let i = 0; i < replicas.length; i++) {
       console.log(`Getting replica details for: ${JSON.stringify(replicas[i])}`);
       if (replicas[i].length > 0) {
-        const replicasDetailsList = await Promise.all( 
-          replicas[i].map((item: any) => fetchClient.getIndexByName(item))
-        )
-        replicaIndexesList.push(replicasDetailsList); 
+        const replicasDetailsList = await Promise.all(replicas[i].map((item: any) => fetchClient.getIndexByName(item)));
+        replicaIndexesList.push(replicasDetailsList);
       } else {
         replicaIndexesList.push([]);
       }
     }
-    console.log(`${replicaIndexesList
-        .map((x: any) => x.map((y: any) => y.id||'none'))
-        .join("\n")}`);
+    console.log(`${replicaIndexesList.map((x: any) => x.map((y: any) => y.id || 'none')).join('\n')}`);
 
     // Get replicas settings
-    let replicaIndexSettingsList: any = [];
+    const replicaIndexSettingsList: any = [];
     console.log(`\nRetrieve all replica index settings:`);
-    for( let i = 0; i < replicaIndexesList.length; i++) {
+    for (let i = 0; i < replicaIndexesList.length; i++) {
       console.log(`Getting replica settings for: ${JSON.stringify(replicaIndexesList[i])}`);
       if (replicaIndexesList[i].length > 0) {
-        const replicasSettingsList = await Promise.all( 
+        const replicasSettingsList = await Promise.all(
           replicaIndexesList[i].map((item: any) => fetchClient.getIndexSettings(item.id))
-        )
-        replicaIndexSettingsList.push(replicasSettingsList); 
+        );
+        replicaIndexSettingsList.push(replicasSettingsList);
       } else {
         replicaIndexSettingsList.push([]);
-      } 
+      }
     }
 
     // Create record with index details, settings and assigned content types
-    indexesListDetails.forEach((item: any, i: number)=>{
-
+    indexesListDetails.forEach((item: any, i: number) => {
       // Add index entry if it's not a replica
       if (!item.parentId) {
-
         // Build replicas settings
-        const replicasSettings = replicaIndexSettingsList[i].map(
-          (x: any, j:number) => ({ 
-            id: replicaIndexesList[i][j].id,
-            name: replicas[i][j],
-            settings: x
-          }));
+        const replicasSettings = replicaIndexSettingsList[i].map((x: any, j: number) => ({
+          id: replicaIndexesList[i][j].id,
+          name: replicas[i][j],
+          settings: x
+        }));
 
         // Create index entry
-        let indexEntry: IndexEntry = {
+        const indexEntry: IndexEntry = {
           id: item.id,
           indexDetails: item,
           settings: settingsList[i],
           replicasSettings
         };
-        
+
         // Add assigned content types if any
-        if ( assignedContentTypesList[i].length > 0 ) { 
-          indexEntry.indexDetails.assignedContentTypes = assignedContentTypesList[i]; 
+        if (assignedContentTypesList[i].length > 0) {
+          indexEntry.indexDetails.assignedContentTypes = assignedContentTypesList[i];
         }
 
         finalIndexesListDetails.push(indexEntry);

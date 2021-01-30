@@ -9,14 +9,14 @@ import paginator from '../../common/dc-management-sdk-js/paginator';
 
 export const command = 'list';
 
-export const desc = "List Webhooks";
+export const desc = 'List Webhooks';
 
 export const builder: CommandOptions = {
   ...SortingOptions,
   ...RenderingOptions
 };
 
-export const itemMapFn = ({ id, label}: Webhook): object => {
+export const itemMapFn = ({ id, label }: Webhook): object => {
   return { ID: id, Label: label };
 };
 
