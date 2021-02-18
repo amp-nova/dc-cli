@@ -34,6 +34,15 @@ export class FetchClientService {
    * Get an extension
    * @param extensionId ID of extension to retrieve
    */
+  async getContentItemByKey(deliveryKey: any): Promise<any> {
+    const contentItem = await this.client.fetchResource(`/hubs/${this.hubId}/delivery-keys/content-item?key=${deliveryKey}`);
+    return contentItem;
+  }
+
+  /**
+   * Get an extension
+   * @param extensionId ID of extension to retrieve
+   */
   async getExtension(extensionId: any): Promise<any> {
     const extension = await this.client.fetchResource(`/extensions/${extensionId}`);
     return extension;
