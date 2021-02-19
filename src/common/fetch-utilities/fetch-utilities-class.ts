@@ -75,7 +75,7 @@ export class FetchUtilities {
         const resourceFinal = resources._embedded[resourceName];
 
         // Delete _links key
-        resourceFinal.forEach((entry: any) => delete entry._links);
+        // resourceFinal.forEach((entry: any) => delete entry._links);
 
         // Set current list
         resourcesList = resourceFinal;

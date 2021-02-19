@@ -7,6 +7,7 @@ import { asyncQuestion } from '../../common/archive/archive-helpers';
 import { readFile } from 'fs';
 import { promisify } from 'util';
 import { FetchClientService, IndexEntry } from '../../services/fetch-client-service-class';
+import { Hub } from 'dc-management-sdk-js';
 
 export type Answer = {
   answer?: string[];
@@ -18,6 +19,10 @@ export const desc = 'Import Indexes';
 
 export const LOG_FILENAME = (platform: string = process.platform): string =>
   getDefaultLogPath('indexes', 'import', platform);
+
+function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 export const builder = (yargs: Argv): void => {
   yargs
@@ -103,6 +108,7 @@ export const handler = async (
         console.log(`...Index settings updated for ID: ${updatedIndexId}`);
         log.addAction('UPDATE INDEX SETTINGS', updatedIndexId || '');
         // await asyncQuestion("");
+        await sleep(3000);
 
         // Get list of replicas settings
         const replicasSettings: any[] = item.replicasSettings;
@@ -126,6 +132,29 @@ export const handler = async (
         console.log(`...Updated replicas settings for IDs: ${updatedReplicasSettingsIds.join(',')}`);
         console.log();
         log.addAction('UPDATE INDEX SETTINGS', updatedReplicasSettingsIds.join(',') || '');
+
+        // Get assigned type
+        const types: any[] = await fetchClient.getIndexAssignedContentTypes(createdIndexId);
+
+        // Get active and archive webhooks
+        if (types.length > 0) {
+          const type = types[0];
+          const activeContentWebhookId = type._links['active-content-webhook'].href.split('/').slice(-1)[0];
+          const archivedContentWebhookId = type._links['archived-content-webhook'].href.split('/').slice(-1)[0];
+
+          // Update webhooks payload
+          console.log(`Updating webhooks ${activeContentWebhookId}, ${archivedContentWebhookId}`);
+          await Promise.all([
+            fetchClient.updateWebhook(activeContentWebhookId, {
+              type: 'text/x-handlebars-template',
+              value: item.activeContentWebhook
+            }),
+            fetchClient.updateWebhook(archivedContentWebhookId, {
+              type: 'text/x-handlebars-template',
+              value: item.archivedContentWebhook
+            })
+          ]);
+        }
       })
     );
 

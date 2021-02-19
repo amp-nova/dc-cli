@@ -74,6 +74,30 @@ export const handler = async (argv: Arguments<ExportBuilderOptions & Configurati
         .join('\n')}`
     );
 
+    // For each assigned content type, get active and archived webhooks ref
+    const activeContentWebhooks: any[] = [];
+    const archivedContentWebhooks: any[] = [];
+    assignedContentTypesList.forEach((types: any, i: number) => {
+      if (types.length > 0) {
+        const type: any = types[0];
+        activeContentWebhooks[i] = type._links['active-content-webhook'].href.split('/').slice(-1)[0];
+        archivedContentWebhooks[i] = type._links['archived-content-webhook'].href.split('/').slice(-1)[0];
+      } else {
+        activeContentWebhooks[i] = null;
+        archivedContentWebhooks[i] = null;
+      }
+    });
+
+    // Get Webhook settings
+    const activeContentWebhooksList = await Promise.all(
+      activeContentWebhooks.map((item: any) => (item ? hub.related.webhooks.get(item) : null))
+    );
+    const archivedContentWebhooksList = await Promise.all(
+      archivedContentWebhooks.map((item: any) => (item ? hub.related.webhooks.get(item) : null))
+    );
+    const activeContentWebhooksPayload = activeContentWebhooksList.map((x: any) => x && x.customPayload.value);
+    const archivedContentWebhooksPayload = archivedContentWebhooksList.map((x: any) => x && x.customPayload.value);
+
     // Extract list of replicas
     console.log(`\nRetrieve list of replicas:`);
     const replicas = settingsList.map((settings: any) => settings.replicas || []);
@@ -97,7 +121,7 @@ export const handler = async (argv: Arguments<ExportBuilderOptions & Configurati
     const replicaIndexSettingsList: any = [];
     console.log(`\nRetrieve all replica index settings:`);
     for (let i = 0; i < replicaIndexesList.length; i++) {
-      console.log(`Getting replica settings for: ${JSON.stringify(replicaIndexesList[i])}`);
+      console.log(`Getting replica settings for: ${JSON.stringify(replicaIndexesList[i].map((x: any) => x.id))}`);
       if (replicaIndexesList[i].length > 0) {
         const replicasSettingsList = await Promise.all(
           replicaIndexesList[i].map((item: any) => fetchClient.getIndexSettings(item.id))
@@ -124,7 +148,9 @@ export const handler = async (argv: Arguments<ExportBuilderOptions & Configurati
           id: item.id,
           indexDetails: item,
           settings: settingsList[i],
-          replicasSettings
+          replicasSettings,
+          activeContentWebhook: activeContentWebhooksPayload[i],
+          archivedContentWebhook: archivedContentWebhooksPayload[i]
         };
 
         // Add assigned content types if any

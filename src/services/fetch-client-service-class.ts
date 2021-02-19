@@ -10,6 +10,8 @@ export interface IndexEntry {
   indexDetails: any;
   settings: any;
   replicasSettings?: any;
+  activeContentWebhook: any;
+  archivedContentWebhook: any;
 }
 
 /**
@@ -87,6 +89,20 @@ export class FetchClientService {
   async updateExtension(extensionId: string, data: any): Promise<string> {
     const updatedExtensionId = await this.client.updateResource(`/extensions/${extensionId}`, extensionId, data);
     return updatedExtensionId;
+  }
+
+  /**
+   * Update an existing webhook
+   * @param webhookId ID of the webhook to update
+   * @param data webhook data
+   */
+  async updateWebhook(webhookId: string, data: any): Promise<string> {
+    const updatedWebhookId = await this.client.updateResource(
+      `/hubs/${this.hubId}/webhooks/${webhookId}`,
+      webhookId,
+      data
+    );
+    return updatedWebhookId;
   }
 
   /**
