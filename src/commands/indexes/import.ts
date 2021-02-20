@@ -146,12 +146,16 @@ export const handler = async (
           console.log(`Updating webhooks ${activeContentWebhookId}, ${archivedContentWebhookId}`);
           await Promise.all([
             fetchClient.updateWebhook(activeContentWebhookId, {
-              type: 'text/x-handlebars-template',
-              value: item.activeContentWebhook
+              customPayload: {
+                type: 'text/x-handlebars-template',
+                value: item.activeContentWebhook
+              }
             }),
             fetchClient.updateWebhook(archivedContentWebhookId, {
-              type: 'text/x-handlebars-template',
-              value: item.archivedContentWebhook
+              customPayload: {
+                type: 'text/x-handlebars-template',
+                value: item.archivedContentWebhook
+              }
             })
           ]);
         }
