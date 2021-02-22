@@ -156,6 +156,19 @@ export class FetchClientService {
   }
 
   /**
+   * Fetch a search index api key
+   * @param indexId ID of the index
+   * @param keyId ID of the key to retrieve
+   */
+  async getSearchApiKey(indexId: any, keyId: any): Promise<any> {
+  
+    // Retrieve index details
+    const key = await this.client.fetchResource(`/algolia-search/${this.hubId}/indexes/${indexId}/keys/${keyId}`);
+
+    return key;
+  }
+
+  /**
    * Retrieve assigned content typs for a specific index
    * @param indexId ID of the index
    */
