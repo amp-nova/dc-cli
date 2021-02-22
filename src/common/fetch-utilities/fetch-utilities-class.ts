@@ -50,7 +50,7 @@ export class FetchUtilities {
       }
 
       // Remove _links key
-      delete resource._links;
+      // delete resource._links;
     }
 
     return resource;
@@ -97,7 +97,7 @@ export class FetchUtilities {
             const resourceFinal = resources._embedded[resourceName];
 
             // Delete _links key
-            resourceFinal.forEach((entry: any) => delete entry._links);
+            // resourceFinal.forEach((entry: any) => delete entry._links);
 
             // Merge with current list
             resourcesList = [...resourcesList, ...resourceFinal];
@@ -132,7 +132,7 @@ export class FetchUtilities {
     );
 
     // Delete _links key
-    resourcesListDetails.forEach(entry => delete entry._links);
+    // resourcesListDetails.forEach(entry => delete entry._links);
 
     return resourcesListDetails;
   }
