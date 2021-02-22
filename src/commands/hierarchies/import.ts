@@ -9,6 +9,8 @@ import { ContentItem, ContentRepository } from 'dc-management-sdk-js';
 import dynamicContentClientFactory from '../../services/dynamic-content-client-factory';
 import { PublishQueue } from '../../common/import/publish-queue';
 import { ImportItemBuilderOptions } from '../../interfaces/import-item-builder-options.interface';
+import paginator from '../../common/dc-management-sdk-js/paginator';
+import { extractSortable } from '../../common/yargs/sorting-options';
 
 export type Answer = {
   answer?: string[];
@@ -30,7 +32,7 @@ export const builder = (yargs: Argv): void => {
     .positional('baseRepo', {
       type: 'string',
       requiresArg: true,
-      describe: 'Import matching the given repository to the import base directory, by ID.'
+      describe: 'Import matching the given repository to the import base directory, by ID or by name.'
     })
     .positional('filePath', {
       describe: 'Source file path containing Hierarchy definition',
@@ -112,7 +114,30 @@ export const handler = async (
 
   try {
     const client = dynamicContentClientFactory(argv);
-    const repo = await client.contentRepositories.get(baseRepo);
+    const hub = await client.hubs.get(argv.hubId);
+    let repo = undefined;
+
+    // Try to get repo by ID
+    try {
+      repo = await client.contentRepositories.get(baseRepo);
+      console.log(`Found repository by ID: ${repo.name} (${repo.id})`);
+    } catch (error) {
+      log.appendLine(`No repository with ID ${argv.baseRepo} found`);
+      repo = null;
+    }
+
+    // If no repo found, maybe a repo name was passed on
+    if (!repo) {
+      const contentRepositoryList = await paginator(hub.related.contentRepositories.list);
+      const repoByName = contentRepositoryList.find((item: any) => item.name === argv.baseRepo);
+      if (repoByName) {
+        console.log(`Found repository by name: ${repoByName.name} (${repoByName.id})`);
+        repo = repoByName;
+      } else {
+        log.appendLine(`No repository with name ${argv.baseRepo} found`);
+        return;
+      }
+    }
 
     const exportedHierarchy = await promisify(readFile)(sourceFile, { encoding: 'utf8' });
     const hierarchy = JSON.parse(exportedHierarchy);
@@ -124,16 +149,6 @@ export const handler = async (
     if (argv.publish) {
       const pubQueue = new PublishQueue(argv);
       log.appendLine(`Publishing ${publishable.length} items.`);
-
-      // for (let i = 0; i < publishable.length; i++) {
-      //   const item = publishable[i];
-      //   try {
-      //     await pubQueue.publish(item);
-      //     log.appendLine(`Started publish for ${item.label}.`);
-      //   } catch (e) {
-      //     log.appendLine(`Failed to initiate publish for ${item.label}: ${e.toString()}`);
-      //   }
-      // }
 
       // Add all content items in the publishing queue in parallel
       await Promise.all(publishable.map((item: any) => pubQueue.publish(item)));
