@@ -10,7 +10,12 @@ Commands:
   dc-cli content-type-schema  Content Type Schema
   dc-cli content-type         Content Type
   dc-cli event                Event
+  dc-cli extensions           Extensions
+  dc-cli hierarchies          Hierarchies
+  dc-cli indexes              Indexes
   dc-cli settings             Settings
+  dc-cli webhooks             Webhooks
+  dc-cli workflow-states      Workflow States
 
 Options:
   --help          Show help                                            [boolean]
