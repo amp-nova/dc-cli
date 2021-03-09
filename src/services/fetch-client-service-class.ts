@@ -275,7 +275,7 @@ export class FetchClientService {
       console.log(`...Found extension: ${extension[0].id}`);
       return extension[0];
     } else {
-      console.log(`...No exetnsion found for name ${extensionName}`);
+      console.log(`...No extension found for name ${extensionName}`);
       return null;
     }
   }
