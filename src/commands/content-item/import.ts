@@ -786,7 +786,7 @@ const importTree = async (
       const item = publishable[i].item;
 
       try {
-        await pubQueue.publish(item);
+        pubQueue.publish(item);
         log.appendLine(`Started publish for ${item.label}.`);
       } catch (e) {
         log.appendLine(`Failed to initiate publish for ${item.label}: ${e.toString()}`);
