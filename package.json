@@ -115,7 +115,7 @@
     "dc-management-sdk-js": "^1.9.0",
     "lodash": "^4.17.15",
     "node-fetch": "^2.6.1",
-    "rimraf": "^3.0.0",
+    "rimraf": "^3.0.2",
     "sanitize-filename": "^1.6.3",
     "table": "^5.4.6",
     "yargs": "^14.0.0"
