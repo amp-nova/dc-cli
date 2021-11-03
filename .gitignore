@@ -38,7 +38,7 @@ node_modules
 .vscode
 
 # Built files
-dist
+# dist
 packages
 
 # Coverage
