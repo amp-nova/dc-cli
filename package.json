@@ -1,5 +1,5 @@
 {
-  "name": "@rezakalfane/dc-cli",
+  "name": "@amp-nova/dc-cli",
   "version": "1.0.1",
   "description": "Dynamic Content CLI Tool",
   "main": "./dist/index.js",

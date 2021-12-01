@@ -39,7 +39,6 @@ export class ContentMapping {
     try {
       const text = await promisify(readFile)(filename, { encoding: 'utf8' });
       const obj = JSON.parse(text);
-
       this.contentItems = new Map(obj.contentItems);
       return true;
     } catch (e) {
