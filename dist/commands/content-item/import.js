@@ -577,7 +577,7 @@ exports.handler = async (argv) => {
     if (mapFile == null) {
         mapFile = getDefaultMappingPath(importTitle);
     }
-    if (mapping.load(mapFile)) {
+    if (await mapping.load(mapFile)) {
         log.appendLine(`Existing mapping loaded from '${mapFile}', changes will be saved back to it.`);
     }
     else {
