@@ -31,6 +31,7 @@ import { asyncQuestion } from '../../common/archive/archive-helpers';
 import { AmplienceSchemaValidator, defaultSchemaLookup } from '../../common/content-item/amplience-schema-validator';
 import { getDefaultLogPath } from '../../common/log-helpers';
 import { PublishQueue } from '../../common/import/publish-queue';
+import _, { Dictionary } from 'lodash';
 
 export function getDefaultMappingPath(name: string, platform: string = process.platform): string {
   return join(
@@ -639,6 +640,26 @@ const rewriteDependancy = (dep: ContentDependancyInfo, mapping: ContentMapping):
   }
 };
 
+const sortDependencies = (a: ItemContentDependancies, b: ItemContentDependancies) => {
+  let z = a.dependants.length > b.dependants.length ? -1 : 1;
+  if (
+    _.includes(
+      _.map(a.dependants, d => d.resolved!.owner.content.id),
+      b.owner.content.id
+    )
+  ) {
+    z = -1;
+  } else if (
+    _.includes(
+      _.map(b.dependants, d => d.resolved!.owner.content.id),
+      a.owner.content.id
+    )
+  ) {
+    z = 1;
+  }
+  return z;
+};
+
 const importTree = async (
   client: DynamicContent,
   tree: ContentDependancyTree,
@@ -725,14 +746,15 @@ const importTree = async (
 
   // Create circular dependancies with all the mappings we have, and update the mapping.
   // Do a second pass that updates the existing assets to point to the new ones.
-  const newDependants: ContentItem[] = [];
+  const dependents: Dictionary<ContentItem> = {};
 
   for (let pass = 0; pass < 2; pass++) {
     const mode = pass === 0 ? 'Creating' : 'Resolving';
     log.appendLine(`${mode} circular dependants.`);
 
-    for (let i = 0; i < tree.circularLinks.length; i++) {
-      const item = tree.circularLinks[i];
+    let circularLinksSorted = tree.circularLinks.sort(sortDependencies);
+    for (let i = 0; i < circularLinksSorted.length; i++) {
+      const item = circularLinksSorted[i];
       const content = item.owner.content;
 
       item.dependancies.forEach(dep => {
@@ -744,11 +766,12 @@ const importTree = async (
 
       let newItem: ContentItem;
       let oldVersion: number;
+
       try {
         const result = await createOrUpdateContent(
           client,
           item.owner.repo,
-          newDependants[i] || mapping.getContentItem(originalId as string),
+          dependents[originalId] || mapping.getContentItem(originalId as string),
           content
         );
         newItem = result.newItem;
@@ -768,7 +791,8 @@ const importTree = async (
           (newItem.id || 'unknown') + (updated ? ` ${oldVersion} ${newItem.version}` : '')
         );
 
-        newDependants[i] = newItem;
+        dependents[originalId] = newItem;
+        content.id = originalId;
         mapping.registerContentItem(originalId as string, newItem.id as string);
       } else {
         if (itemShouldPublish(content) && (newItem.version != oldVersion || argv.republish)) {

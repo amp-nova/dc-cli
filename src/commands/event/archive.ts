@@ -81,16 +81,14 @@ export const getEvents = async ({
   hubId: string;
   name?: string | string[];
   client: DynamicContent;
-}): Promise<
-  {
-    event: Event;
-    editions: Edition[];
-    archiveEditions: Edition[];
-    deleteEditions: Edition[];
-    unscheduleEditions: Edition[];
-    command: string;
-  }[]
-> => {
+}): Promise<{
+  event: Event;
+  editions: Edition[];
+  archiveEditions: Edition[];
+  deleteEditions: Edition[];
+  unscheduleEditions: Edition[];
+  command: string;
+}[]> => {
   try {
     if (id != null) {
       const event = await client.events.get(id);

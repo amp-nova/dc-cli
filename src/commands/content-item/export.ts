@@ -145,7 +145,10 @@ const getContentItems = async (
       continue;
     }
 
-    Array.prototype.push.apply(items, newItems.map(item => ({ item, path: baseDir })));
+    Array.prototype.push.apply(
+      items,
+      newItems.map(item => ({ item, path: baseDir }))
+    );
   }
 
   const parallelism = 10;
@@ -182,7 +185,10 @@ const getContentItems = async (
             return;
           }
         }
-        Array.prototype.push.apply(items, newItems.map(item => ({ item, path: path })));
+        Array.prototype.push.apply(
+          items,
+          newItems.map(item => ({ item, path: path }))
+        );
 
         try {
           const subfolders = await paginator(folder.related.folders.list);

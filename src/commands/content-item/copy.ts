@@ -135,7 +135,7 @@ export const builder = (yargs: Argv): void => {
 };
 
 function rimraf(dir: string): Promise<Error> {
-  return new Promise((resolve): void => {
+  return new Promise((resolve: any): void => {
     rmdir(dir, resolve);
   });
 }
